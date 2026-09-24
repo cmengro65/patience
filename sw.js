@@ -1,5 +1,5 @@
 /* Hält die App offline bereit. Bei jeder neuen Fassung ändert build-app.py die Version. */
-var VERSION = 'patience-2026-09-24-1413';
+var VERSION = 'patience-2026-09-24-1434';
 var DATEIEN = ['./','./index.html','./manifest.webmanifest',
                './icon-180.png','./icon-192.png','./icon-512.png','./icon-152.png'];
 

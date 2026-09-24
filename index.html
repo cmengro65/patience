@@ -1652,8 +1652,8 @@ if(window.claude&&window.claude.hot){
 
 
 <div id="tipp" hidden>
-  <b>Patience aufs iPad legen</b>
-  Tippe unten auf das Teilen-Zeichen und dann auf „Zum Home-Bildschirm“.
+  <b id="tippT">Patience aufs iPad legen</b>
+  <span id="tippW">Tippe unten auf das Teilen-Zeichen und dann auf „Zum Home-Bildschirm“.</span>
   Danach startest du das Spiel mit einem Tipp – auch ohne Internet.
   <div><button id="tippZu">Verstanden</button></div>
 </div>
@@ -1665,6 +1665,11 @@ if(window.claude&&window.claude.hot){
   try { weg = localStorage.getItem('pat.tipp') === 'weg'; } catch(e){}
   if(!app && !weg){
     var t = document.getElementById('tipp');
+    if(/Android/i.test(navigator.userAgent)){
+      document.getElementById('tippT').textContent = 'Patience auf den Startbildschirm legen';
+      document.getElementById('tippW').textContent =
+        'Tippe oben rechts auf die drei Punkte und dann auf „App installieren“.';
+    }
     setTimeout(function(){ t.hidden = false; }, 1500);
     document.getElementById('tippZu').onclick = function(){
       t.hidden = true;
