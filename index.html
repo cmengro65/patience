@@ -66,9 +66,12 @@ button:focus-visible{outline:2px solid var(--brass); outline-offset:2px}
 .primary:hover:not(:disabled){background:linear-gradient(#e8bc63,var(--brass))}
 
 /* ================= Menü ================= */
-#menu{position:absolute; inset:0; overflow:auto; display:flex; align-items:center; justify-content:center;
+/* Kein senkrechtes Zentrieren per flex: bei vielen Kacheln wird sonst oben abgeschnitten,
+   und der abgeschnittene Teil ist nicht erreichbar. */
+#menu{position:absolute; inset:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding-inline:16px; padding-block:28px;}
-.menuInner{width:100%; max-width:760px; display:flex; flex-direction:column; gap:22px}
+.menuInner{width:100%; max-width:760px; margin:0 auto;
+  display:flex; flex-direction:column; gap:22px}
 .brand{display:flex; align-items:center; gap:18px; flex-wrap:wrap}
 .fan{position:relative; width:76px; height:66px; flex:0 0 auto}
 .fan i{position:absolute; width:44px; height:62px; border-radius:5px; border:1px solid rgba(0,0,0,.35);
@@ -1653,29 +1656,61 @@ if(window.claude&&window.claude.hot){
 
 <div id="tipp" hidden>
   <b id="tippT">Patience aufs iPad legen</b>
-  <span id="tippW">Tippe unten auf das Teilen-Zeichen und dann auf „Zum Home-Bildschirm“.</span>
-  Danach startest du das Spiel mit einem Tipp – auch ohne Internet.
-  <div><button id="tippZu">Verstanden</button></div>
+  <span id="tippW"></span>
+  Danach startest du das Spiel mit einem Tipp auf das Symbol – auch ohne Internet.
+  <div><button id="tippZu">Schließen</button></div>
 </div>
 <script>
 (function(){
+  var ua = navigator.userAgent;
+  var ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var iphone = /iPhone|iPod/.test(ua);
+  var android = /Android/i.test(ua);
+  var safari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
   var app = window.navigator.standalone === true ||
             (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
-  var weg = false;
-  try { weg = localStorage.getItem('pat.tipp') === 'weg'; } catch(e){}
-  if(!app && !weg){
-    var t = document.getElementById('tipp');
-    if(/Android/i.test(navigator.userAgent)){
-      document.getElementById('tippT').textContent = 'Patience auf den Startbildschirm legen';
-      document.getElementById('tippW').textContent =
-        'Tippe oben rechts auf die drei Punkte und dann auf „App installieren“.';
+
+  function text(){
+    var t = document.getElementById('tippT'), w = document.getElementById('tippW');
+    if(android){
+      t.textContent = 'Patience auf den Startbildschirm legen';
+      w.textContent = 'Tippe oben rechts auf die drei Punkte und dann auf „App installieren".';
+    } else if(iphone){
+      t.textContent = 'Patience auf den Home-Bildschirm legen';
+      w.textContent = 'Tippe unten in der Mitte auf das Teilen-Zeichen – das Quadrat mit dem Pfeil nach oben –, '
+        + 'wische in der Liste nach unten zu „Zum Home-Bildschirm" und tippe oben rechts auf „Hinzufügen".';
+    } else {
+      t.textContent = 'Patience auf den Home-Bildschirm legen';
+      w.textContent = 'Tippe oben rechts neben der Adresszeile auf das Teilen-Zeichen – das Quadrat mit dem '
+        + 'Pfeil nach oben –, wische in der Liste nach unten zu „Zum Home-Bildschirm" und tippe oben rechts '
+        + 'auf „Hinzufügen".';
+      if((ipad || iphone) && !safari)
+        w.textContent = 'Das geht auf dem iPad nur in Safari. Öffne diese Seite bitte in Safari, '
+          + 'tippe dort oben rechts auf das Teilen-Zeichen und dann auf „Zum Home-Bildschirm".';
     }
-    setTimeout(function(){ t.hidden = false; }, 1500);
-    document.getElementById('tippZu').onclick = function(){
-      t.hidden = true;
-      try { localStorage.setItem('pat.tipp','weg'); } catch(e){}
-    };
   }
+
+  function zeigen(){ text(); document.getElementById('tipp').hidden = false; }
+
+  if(!app){
+    var weg = false;
+    try { weg = sessionStorage.getItem('pat.tipp') === 'weg'; } catch(e){}
+    if(!weg) setTimeout(zeigen, 1200);
+    document.getElementById('tippZu').onclick = function(){
+      document.getElementById('tipp').hidden = true;
+      try { sessionStorage.setItem('pat.tipp','weg'); } catch(e){}
+    };
+    /* Dauerhafter Knopf im Menü, damit die Anleitung nie verloren geht */
+    var leiste = document.querySelector('.menuInner');
+    if(leiste){
+      var k = document.createElement('button');
+      k.textContent = 'Wie lege ich Patience auf den Home-Bildschirm?';
+      k.style.cssText = 'align-self:flex-start; margin-top:-6px';
+      k.onclick = zeigen;
+      leiste.appendChild(k);
+    }
+  }
+
   if('serviceWorker' in navigator){
     addEventListener('load', function(){
       navigator.serviceWorker.register('./sw.js').catch(function(){});
